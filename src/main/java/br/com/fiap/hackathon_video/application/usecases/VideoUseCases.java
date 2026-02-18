@@ -1,9 +1,7 @@
 package br.com.fiap.hackathon_video.application.usecases;
 
-import org.springframework.web.multipart.MultipartFile;
+import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
 
 public interface VideoUseCases {
-	void processVideo(String videoPath);
-
-	String uploadVideo(MultipartFile videoData);
+	String uploadVideo(VideoUploadRequestDTO videoDTO);
 }

@@ -38,7 +38,7 @@ public class VideoController {
 
 		log.info("Usuário {} fazendo upload de vídeo: {}", username, videoDTO.getTitle());
 
-		VideoResponseDTO response = new VideoResponseDTO(videoUseCases.uploadVideo(videoDTO.getFile()));
+		VideoResponseDTO response = new VideoResponseDTO(videoUseCases.uploadVideo(videoDTO));
 		return ResponseEntity.ok(response);
 	}
 
