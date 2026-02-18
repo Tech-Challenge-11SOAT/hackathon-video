@@ -1,24 +1,22 @@
 package br.com.fiap.hackathon_video.adapters.inbound.controllers;
 
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
+import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
+import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
+import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
+import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.web.bind.annotation.PostMapping;
-
-import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
-import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
-import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
-import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 
 @Slf4j
 @RestController
@@ -38,7 +36,7 @@ public class VideoController {
 
 		log.info("Usuário {} fazendo upload de vídeo: {}", username, videoDTO.getTitle());
 
-		VideoResponseDTO response = new VideoResponseDTO(videoUseCases.uploadVideo(videoDTO));
+		VideoResponseDTO response = videoUseCases.uploadVideo(videoDTO);
 		return ResponseEntity.ok(response);
 	}
 
