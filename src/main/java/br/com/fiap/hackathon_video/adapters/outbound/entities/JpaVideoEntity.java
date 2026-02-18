@@ -29,25 +29,24 @@ public class JpaVideoEntity {
 	@GeneratedValue
 	private UUID id;
 
-	private String filename;
-	private String originalFilename;
-	private Long fileSize;
-	private String storagePath;
-
-	@Column(name = "uploaded_at")
-	private LocalDateTime uploadedAt;
-
-	@PrePersist
-	public void prePersist() {
-		uploadedAt = LocalDateTime.now();
-	}
+	private UUID userId;
+	private String originalFileName;
+	private String s3VideoKey;
+	private String s3ZipKey;
+	private String status;
+	private String errorMessage;
+	private LocalDateTime createdAt;
+	private LocalDateTime updatedAt;
 
 	public JpaVideoEntity(Video video) {
 		this.id = video.getId();
-		this.filename = video.getFilename();
-		this.originalFilename = video.getOriginalFilename();
-		this.fileSize = video.getFileSize();
-		this.storagePath = video.getStoragePath();
-		this.uploadedAt = video.getUploadedAt();
+		this.userId = video.getUserId();
+		this.originalFileName = video.getOriginalFileName();
+		this.s3VideoKey = video.getS3VideoKey();
+		this.s3ZipKey = video.getS3ZipKey();
+		this.status = video.getStatus();
+		this.errorMessage = video.getErrorMessage();
+		this.createdAt = video.getCreatedAt();
+		this.updatedAt = video.getUpdatedAt();
 	}
 }
