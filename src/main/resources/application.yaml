@@ -1,3 +1,9 @@
 spring:
   application:
     name: hackathon-video
+
+server:
+  port: 8081
+
+jwt:
+  secret: postechHackathon2026SecretKey12345
