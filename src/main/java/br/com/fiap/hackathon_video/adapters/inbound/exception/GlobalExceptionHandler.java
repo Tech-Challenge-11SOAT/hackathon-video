@@ -20,7 +20,14 @@ import br.com.fiap.hackathon_video.adapters.inbound.dto.response.ErrorResponseDT
 import br.com.fiap.hackathon_video.domain.exception.BusinessRuleException;
 import br.com.fiap.hackathon_video.domain.exception.DomainException;
 import br.com.fiap.hackathon_video.domain.exception.FileUploadException;
+import br.com.fiap.hackathon_video.domain.exception.InvalidVideoException;
+import br.com.fiap.hackathon_video.domain.exception.InvalidVideoFormatException;
 import br.com.fiap.hackathon_video.domain.exception.ResourceNotFoundException;
+import br.com.fiap.hackathon_video.domain.exception.S3UploadException;
+import br.com.fiap.hackathon_video.domain.exception.UserNotFoundException;
+import br.com.fiap.hackathon_video.domain.exception.VideoNotFoundException;
+import br.com.fiap.hackathon_video.domain.exception.VideoProcessingException;
+import br.com.fiap.hackathon_video.domain.exception.VideoSizeLimitExceededException;
 import br.com.fiap.hackathon_video.infrastructure.security.exception.ExpiredTokenException;
 import br.com.fiap.hackathon_video.infrastructure.security.exception.InvalidTokenException;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +35,50 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	/**
+	 * Trata exceções de vídeo não encontrado
+	 * HTTP 404 - NOT FOUND
+	 */
+	@ExceptionHandler(VideoNotFoundException.class)
+	public ResponseEntity<ErrorResponseDTO> handleVideoNotFoundException(
+			VideoNotFoundException ex,
+			WebRequest request) {
+
+		log.error("Vídeo não encontrado: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.NOT_FOUND.value())
+				.error(HttpStatus.NOT_FOUND.getReasonPhrase())
+				.message(ex.getMessage())
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+	}
+
+	/**
+	 * Trata exceções de usuário não encontrado
+	 * HTTP 404 - NOT FOUND
+	 */
+	@ExceptionHandler(UserNotFoundException.class)
+	public ResponseEntity<ErrorResponseDTO> handleUserNotFoundException(
+			UserNotFoundException ex,
+			WebRequest request) {
+
+		log.error("Usuário não encontrado: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.NOT_FOUND.value())
+				.error(HttpStatus.NOT_FOUND.getReasonPhrase())
+				.message(ex.getMessage())
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+	}
 
 	/**
 	 * Trata exceções de recurso não encontrado
@@ -74,26 +125,117 @@ public class GlobalExceptionHandler {
 	}
 
 	/**
-	 * Trata exceções de upload de arquivo
+	 * Trata exceções de vídeo inválido
 	 * HTTP 400 - BAD REQUEST
 	 */
-	@ExceptionHandler(FileUploadException.class)
-	public ResponseEntity<ErrorResponseDTO> handleFileUploadException(
-			FileUploadException ex,
+	@ExceptionHandler(InvalidVideoException.class)
+	public ResponseEntity<ErrorResponseDTO> handleInvalidVideoException(
+			InvalidVideoException ex,
 			WebRequest request) {
 
-		log.error("Erro no upload de arquivo: {}", ex.getMessage());
+		log.error("Vídeo inválido: {}", ex.getMessage());
 
 		ErrorResponseDTO error = ErrorResponseDTO.builder()
 				.timestamp(LocalDateTime.now())
 				.status(HttpStatus.BAD_REQUEST.value())
 				.error(HttpStatus.BAD_REQUEST.getReasonPhrase())
 				.message(ex.getMessage())
-				.details("Verifique se o arquivo está no formato correto e não está corrompido")
 				.path(getPath(request))
 				.build();
 
 		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+	}
+
+	/**
+	 * Trata exceções de formato de vídeo inválido
+	 * HTTP 400 - BAD REQUEST
+	 */
+	@ExceptionHandler(InvalidVideoFormatException.class)
+	public ResponseEntity<ErrorResponseDTO> handleInvalidVideoFormatException(
+			InvalidVideoFormatException ex,
+			WebRequest request) {
+
+		log.error("Formato de vídeo inválido: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.BAD_REQUEST.value())
+				.error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+				.message(ex.getMessage())
+				.details("Formatos suportados: mp4, avi, mkv, mov, flv")
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+	}
+
+	/**
+	 * Trata exceções de tamanho de vídeo excedido
+	 * HTTP 413 - PAYLOAD TOO LARGE
+	 */
+	@ExceptionHandler(VideoSizeLimitExceededException.class)
+	public ResponseEntity<ErrorResponseDTO> handleVideoSizeLimitExceededException(
+			VideoSizeLimitExceededException ex,
+			WebRequest request) {
+
+		log.error("Tamanho de vídeo excedido: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.PAYLOAD_TOO_LARGE.value())
+				.error(HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase())
+				.message(ex.getMessage())
+				.details("O tamanho máximo permitido para vídeos é 5GB")
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(error);
+	}
+
+	/**
+	 * Trata exceções de erro no upload para S3
+	 * HTTP 500 - INTERNAL SERVER ERROR
+	 */
+	@ExceptionHandler(S3UploadException.class)
+	public ResponseEntity<ErrorResponseDTO> handleS3UploadException(
+			S3UploadException ex,
+			WebRequest request) {
+
+		log.error("Erro ao fazer upload para S3: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+				.error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+				.message("Erro ao fazer upload do arquivo")
+				.details("Ocorreu um erro ao fazer upload para o servidor. Tente novamente mais tarde")
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+	}
+
+	/**
+	 * Trata exceções de processamento de vídeo
+	 * HTTP 500 - INTERNAL SERVER ERROR
+	 */
+	@ExceptionHandler(VideoProcessingException.class)
+	public ResponseEntity<ErrorResponseDTO> handleVideoProcessingException(
+			VideoProcessingException ex,
+			WebRequest request) {
+
+		log.error("Erro ao processar vídeo: {}", ex.getMessage());
+
+		ErrorResponseDTO error = ErrorResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+				.error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+				.message(ex.getMessage())
+				.details("Erro ao processar o vídeo. O administrador foi notificado")
+				.path(getPath(request))
+				.build();
+
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
 	}
 
 	/**
