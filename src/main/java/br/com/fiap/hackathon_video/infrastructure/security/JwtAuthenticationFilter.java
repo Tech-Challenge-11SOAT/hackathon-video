@@ -74,7 +74,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 		log.info("Token válido para o usuário: {}", username);
 
-		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, null,
+		UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(username, token,
 				Collections.emptyList());
 		authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 

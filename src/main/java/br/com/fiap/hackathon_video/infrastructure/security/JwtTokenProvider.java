@@ -55,7 +55,7 @@ public class JwtTokenProvider implements TokenValidationPort {
 	public String extractUserId(String token) {
 		try {
 			Claims claims = parseClaims(token);
-			return claims.get("userId", String.class);
+			return claims.get("idUser", String.class);
 		} catch (ExpiredJwtException e) {
 			throw new ExpiredTokenException("Token JWT expirado", e);
 		} catch (JwtException e) {
