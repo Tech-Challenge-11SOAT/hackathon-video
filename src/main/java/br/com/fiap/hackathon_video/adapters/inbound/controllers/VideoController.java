@@ -11,9 +11,6 @@ import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadReque
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
 import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
 import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,22 +19,20 @@ import lombok.extern.slf4j.Slf4j;
 @RestController
 @RequestMapping("/api/v1/videos")
 @RequiredArgsConstructor
-@Tag(name = "Videos", description = "Endpoints para gerenciamento de vídeos")
-@SecurityRequirement(name = "Bearer Authentication")
-public class VideoController {
+public class VideoController implements IVideoControllerSwagger {
 
 	private final VideoUseCases videoUseCases;
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 
+	@Override
 	@PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-	@Operation(summary = "Upload de vídeo", description = "Realiza upload de um arquivo de vídeo")
 	public ResponseEntity<VideoResponseDTO> upload(@Valid @ModelAttribute VideoUploadRequestDTO videoDTO) {
 		String username = getAuthenticatedUserUseCase.getAuthenticatedUsername();
 
 		log.info("Usuário {} fazendo upload de vídeo: {}", username, videoDTO.getTitle());
 
 		VideoResponseDTO response = videoUseCases.uploadVideo(videoDTO);
-		return ResponseEntity.ok(response);
+		return ResponseEntity.accepted().body(response);
 	}
 
 }
