@@ -35,10 +35,9 @@ public class AwsS3Config {
 				.credentialsProvider(StaticCredentialsProvider.create(
 						AwsBasicCredentials.create(accessKeyId, secretAccessKey)));
 
-		// Suporte para LocalStack ou MinIO
 		if (s3Endpoint != null && !s3Endpoint.isEmpty()) {
 			builder.endpointOverride(URI.create(s3Endpoint))
-					.forcePathStyle(true); // Necessário para LocalStack
+					.forcePathStyle(true);
 		}
 
 		return builder.build();

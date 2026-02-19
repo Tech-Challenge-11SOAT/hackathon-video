@@ -37,10 +37,8 @@ public class VideoServiceImpl implements VideoUseCases {
 
 			String userId = getAuthenticatedUserUseCase.getAuthenticatedUserId();
 
-			// Gera a chave S3 para o vídeo
 			String s3VideoKey = "videos/" + UUID.randomUUID() + "/" + videoDTO.getFile().getOriginalFilename();
 
-			// Upload do vídeo para o S3
 			log.info("Iniciando upload do vídeo para S3: {}", s3VideoKey);
 			s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
 			log.info("Upload do vídeo concluído com sucesso: {}", s3VideoKey);
