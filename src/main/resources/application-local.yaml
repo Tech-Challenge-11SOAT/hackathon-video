@@ -1,19 +1,17 @@
+# Configuração para ambiente local com LocalStack S3
 spring:
   application:
     name: hackathon-video
-  profiles:
-    active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/hackathon-videos?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    url: jdbc:mysql://localhost:3306/hackathon-videos?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
     show-sql: true
-  # Flyway Configuration
   flyway:
     baseline-on-migrate: true
     validate-on-migrate: true
@@ -29,9 +27,12 @@ server:
 jwt:
   secret: postechHackathon2026SecretKey12345
 
+# Configuração LocalStack S3
 aws:
-  region: ${AWS_REGION:us-east-1}
-  access-key-id: ${AWS_ACCESS_KEY_ID:your-access-key}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY:your-secret-key}
+  region: us-east-1
+  access-key-id: test
+  secret-access-key: test
   s3:
-    bucket-name: ${AWS_S3_BUCKET_NAME:hackathon-videos-bucket}
+    bucket-name: hackathon-videos-bucket
+    endpoint: http://localhost:4566
+

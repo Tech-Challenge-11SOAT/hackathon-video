@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
 import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
+import br.com.fiap.hackathon_video.application.ports.outbound.S3StoragePort;
 import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoException;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoFormatException;
@@ -27,6 +28,7 @@ public class VideoServiceImpl implements VideoUseCases {
 
 	private final VideoRepository videoRepository;
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
+	private final S3StoragePort s3StoragePort;
 
 	@Override
 	public VideoResponseDTO uploadVideo(VideoUploadRequestDTO videoDTO) {
@@ -35,8 +37,13 @@ public class VideoServiceImpl implements VideoUseCases {
 
 			String userId = getAuthenticatedUserUseCase.getAuthenticatedUserId();
 
-			// TODO: Integrar com S3 para upload do arquivo
+			// Gera a chave S3 para o vídeo
 			String s3VideoKey = "videos/" + UUID.randomUUID() + "/" + videoDTO.getFile().getOriginalFilename();
+
+			// Upload do vídeo para o S3
+			log.info("Iniciando upload do vídeo para S3: {}", s3VideoKey);
+			s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
+			log.info("Upload do vídeo concluído com sucesso: {}", s3VideoKey);
 
 			Video video = new Video(
 					UUID.randomUUID(),
