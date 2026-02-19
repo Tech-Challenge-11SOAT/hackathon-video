@@ -27,7 +27,6 @@ server:
 jwt:
   secret: postechHackathon2026SecretKey12345
 
-# Configuração LocalStack S3
 aws:
   region: us-east-1
   access-key-id: test
