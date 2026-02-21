@@ -22,6 +22,11 @@ spring:
     ignore-migration-patterns: "*:missing,*:future"
     locations: classpath:db/migration
     clean-disabled: true
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
 
 server:
   port: 8081
@@ -31,7 +36,13 @@ jwt:
 
 aws:
   region: ${AWS_REGION:us-east-1}
-  access-key-id: ${AWS_ACCESS_KEY_ID:your-access-key}
-  secret-access-key: ${AWS_SECRET_ACCESS_KEY:your-secret-key}
+  access-key-id: ${AWS_ACCESS_KEY_ID:test}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:test}
   s3:
     bucket-name: ${AWS_S3_BUCKET_NAME:hackathon-videos-bucket}
+
+app:
+  rabbitmq:
+    exchange: ${RABBITMQ_EXCHANGE:video.processing.exchange}
+    queue: ${RABBITMQ_QUEUE:video.processing.queue}
+    routing-key: ${RABBITMQ_ROUTING_KEY:video.processing.routing}
