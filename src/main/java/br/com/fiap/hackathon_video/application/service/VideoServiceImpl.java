@@ -11,10 +11,11 @@ import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUse
 import br.com.fiap.hackathon_video.application.ports.outbound.S3StoragePort;
 import br.com.fiap.hackathon_video.application.ports.outbound.VideoProcessingPublisherPort;
 import br.com.fiap.hackathon_video.application.ports.outbound.dto.VideoProcessingMessage;
+import br.com.fiap.hackathon_video.application.usecases.ProcessingJobsUseCases;
 import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
+import br.com.fiap.hackathon_video.domain.enums.EStatus;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoException;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoFormatException;
-import br.com.fiap.hackathon_video.domain.video.EStatus;
 import br.com.fiap.hackathon_video.domain.video.Video;
 import br.com.fiap.hackathon_video.domain.video.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,18 +33,19 @@ public class VideoServiceImpl implements VideoUseCases {
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 	private final S3StoragePort s3StoragePort;
 	private final VideoProcessingPublisherPort videoProcessingPublisherPort;
+	private final ProcessingJobsUseCases processingJobsUseCases;
 
 	@Override
 	public VideoResponseDTO uploadVideo(VideoUploadRequestDTO videoDTO) {
 		try {
 			this.validateVideoFile(videoDTO);
 
-			String userId = getAuthenticatedUserUseCase.getAuthenticatedUserId();
+			String userId = this.getAuthenticatedUserUseCase.getAuthenticatedUserId();
 
 			String s3VideoKey = "videos/" + UUID.randomUUID() + "/" + videoDTO.getFile().getOriginalFilename();
 
 			log.info("Iniciando upload do vídeo para S3: {}", s3VideoKey);
-			s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
+			this.s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
 			log.info("Upload do vídeo concluído com sucesso: {}", s3VideoKey);
 
 			Video video = new Video(
@@ -59,6 +61,10 @@ public class VideoServiceImpl implements VideoUseCases {
 
 			Video savedVideo = this.createVideo(video);
 
+			this.processingJobsUseCases.createProcessingJob(savedVideo.getId(), savedVideo.getS3VideoKey());
+			log.info("Job de processamento criado para o vídeo: {} com o S3 key: {}", savedVideo.getId(),
+					savedVideo.getS3VideoKey());
+
 			VideoProcessingMessage message = VideoProcessingMessage.builder()
 					.videoId(savedVideo.getId())
 					.userId(savedVideo.getUserId())
@@ -67,7 +73,7 @@ public class VideoServiceImpl implements VideoUseCases {
 					.createdAt(savedVideo.getCreatedAt())
 					.build();
 
-			videoProcessingPublisherPort.publishVideoProcessingRequest(message);
+			this.videoProcessingPublisherPort.publishVideoProcessingRequest(message);
 
 			log.info("Vídeo criado com sucesso: {}", savedVideo.getId());
 

@@ -1,4 +1,4 @@
-package br.com.fiap.hackathon_video.domain.video;
+package br.com.fiap.hackathon_video.domain.enums;
 
 public enum EStatus {
 	PENDING,

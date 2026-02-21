@@ -10,7 +10,7 @@ import java.util.UUID;
 
 import org.hibernate.annotations.SQLRestriction;
 
-import br.com.fiap.hackathon_video.domain.video.EStatus;
+import br.com.fiap.hackathon_video.domain.enums.EStatus;
 
 @Entity
 @Table(name = "videos", indexes = {
