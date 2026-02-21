@@ -1,6 +1,7 @@
 package br.com.fiap.hackathon_video.application.service;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -27,7 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoServiceImpl implements VideoUseCases {
 
 	private static final long MAX_FILE_SIZE = 5_000_000_000L; // 5GB
-	private static final String[] ALLOWED_FORMATS = { "mp4", "avi", "mkv", "mov", "flv", "webm", "m4v" };
+	private static final Set<String> ALLOWED_FORMATS = Set.of("mp4", "avi", "mkv", "mov", "flv", "webm",
+			"m4v");
 
 	private final VideoRepository videoRepository;
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
@@ -41,39 +43,15 @@ public class VideoServiceImpl implements VideoUseCases {
 			this.validateVideoFile(videoDTO);
 
 			String userId = this.getAuthenticatedUserUseCase.getAuthenticatedUserId();
+			String originalFileName = videoDTO.getFile().getOriginalFilename();
+			String s3VideoKey = buildS3VideoKey(originalFileName);
 
-			String s3VideoKey = "videos/" + UUID.randomUUID() + "/" + videoDTO.getFile().getOriginalFilename();
+			this.uploadVideoToS3(videoDTO, s3VideoKey);
 
-			log.info("Iniciando upload do vídeo para S3: {}", s3VideoKey);
-			this.s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
-			log.info("Upload do vídeo concluído com sucesso: {}", s3VideoKey);
+			Video savedVideo = this.createVideo(buildVideo(userId, originalFileName, s3VideoKey));
 
-			Video video = new Video(
-					UUID.randomUUID(),
-					UUID.fromString(userId),
-					videoDTO.getFile().getOriginalFilename(),
-					s3VideoKey,
-					null,
-					EStatus.PENDING.name(),
-					null,
-					LocalDateTime.now(),
-					LocalDateTime.now());
-
-			Video savedVideo = this.createVideo(video);
-
-			this.processingJobsUseCases.createProcessingJob(savedVideo.getId(), savedVideo.getS3VideoKey());
-			log.info("Job de processamento criado para o vídeo: {} com o S3 key: {}", savedVideo.getId(),
-					savedVideo.getS3VideoKey());
-
-			VideoProcessingMessage message = VideoProcessingMessage.builder()
-					.videoId(savedVideo.getId())
-					.userId(savedVideo.getUserId())
-					.s3VideoKey(savedVideo.getS3VideoKey())
-					.originalFileName(savedVideo.getOriginalFileName())
-					.createdAt(savedVideo.getCreatedAt())
-					.build();
-
-			this.videoProcessingPublisherPort.publishVideoProcessingRequest(message);
+			this.createProcessingJob(savedVideo);
+			this.publishProcessingMessage(savedVideo);
 
 			log.info("Vídeo criado com sucesso: {}", savedVideo.getId());
 
@@ -101,11 +79,12 @@ public class VideoServiceImpl implements VideoUseCases {
 	 * Valida se o arquivo de vídeo é válido
 	 */
 	private void validateVideoFile(VideoUploadRequestDTO videoDTO) {
-		if (videoDTO.getFile() == null || videoDTO.getFile().isEmpty()) {
+		var file = videoDTO.getFile();
+		if (file == null || file.isEmpty()) {
 			throw new InvalidVideoException("Arquivo de vídeo é obrigatório");
 		}
 
-		String fileName = videoDTO.getFile().getOriginalFilename();
+		String fileName = file.getOriginalFilename();
 		if (fileName == null || fileName.isEmpty()) {
 			throw new InvalidVideoException("Nome do arquivo é inválido");
 		}
@@ -116,7 +95,7 @@ public class VideoServiceImpl implements VideoUseCases {
 			throw new InvalidVideoFormatException(fileName);
 		}
 
-		long fileSize = videoDTO.getFile().getSize();
+		long fileSize = file.getSize();
 		if (fileSize > MAX_FILE_SIZE) {
 			throw new InvalidVideoException(
 					String.format("Arquivo muito grande. Tamanho: %d bytes, Máximo: %d bytes", fileSize,
@@ -137,11 +116,47 @@ public class VideoServiceImpl implements VideoUseCases {
 	}
 
 	private boolean isValidFormat(String extension) {
-		for (String allowedFormat : ALLOWED_FORMATS) {
-			if (allowedFormat.equalsIgnoreCase(extension)) {
-				return true;
-			}
-		}
-		return false;
+		return ALLOWED_FORMATS.contains(extension);
+	}
+
+	private String buildS3VideoKey(String originalFileName) {
+		return "videos/" + UUID.randomUUID() + "/" + originalFileName;
+	}
+
+	private void uploadVideoToS3(VideoUploadRequestDTO videoDTO, String s3VideoKey) {
+		log.info("Iniciando upload do vídeo para S3: {}", s3VideoKey);
+		this.s3StoragePort.uploadVideo(videoDTO.getFile(), s3VideoKey);
+		log.info("Upload do vídeo concluído com sucesso: {}", s3VideoKey);
+	}
+
+	private Video buildVideo(String userId, String originalFileName, String s3VideoKey) {
+		return new Video(
+				UUID.randomUUID(),
+				UUID.fromString(userId),
+				originalFileName,
+				s3VideoKey,
+				null,
+				EStatus.PENDING,
+				null,
+				LocalDateTime.now(),
+				LocalDateTime.now());
+	}
+
+	private void createProcessingJob(Video savedVideo) {
+		this.processingJobsUseCases.createProcessingJob(savedVideo.getId(), savedVideo.getS3VideoKey());
+		log.info("Job de processamento criado para o vídeo: {} com o S3 key: {}", savedVideo.getId(),
+				savedVideo.getS3VideoKey());
+	}
+
+	private void publishProcessingMessage(Video savedVideo) {
+		VideoProcessingMessage message = VideoProcessingMessage.builder()
+				.videoId(savedVideo.getId())
+				.userId(savedVideo.getUserId())
+				.s3VideoKey(savedVideo.getS3VideoKey())
+				.originalFileName(savedVideo.getOriginalFileName())
+				.createdAt(savedVideo.getCreatedAt())
+				.build();
+
+		this.videoProcessingPublisherPort.publishVideoProcessingRequest(message);
 	}
 }

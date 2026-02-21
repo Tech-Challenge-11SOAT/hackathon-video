@@ -3,13 +3,15 @@ package br.com.fiap.hackathon_video.domain.video;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+import br.com.fiap.hackathon_video.domain.enums.EStatus;
+
 public class Video {
 	private UUID id;
 	private UUID userId;
 	private String originalFileName;
 	private String s3VideoKey;
 	private String s3ZipKey;
-	private String status;
+	private EStatus status;
 	private String errorMessage;
 	private LocalDateTime createdAt;
 	private LocalDateTime updatedAt;
@@ -17,7 +19,7 @@ public class Video {
 	public Video() {
 	}
 
-	public Video(UUID id, UUID userId, String originalFileName, String s3VideoKey, String s3ZipKey, String status,
+	public Video(UUID id, UUID userId, String originalFileName, String s3VideoKey, String s3ZipKey, EStatus status,
 			String errorMessage, LocalDateTime createdAt, LocalDateTime updatedAt) {
 		this.id = id;
 		this.userId = userId;
@@ -70,11 +72,11 @@ public class Video {
 		this.s3ZipKey = s3ZipKey;
 	}
 
-	public String getStatus() {
+	public EStatus getStatus() {
 		return this.status;
 	}
 
-	public void setStatus(String status) {
+	public void setStatus(EStatus status) {
 		this.status = status;
 	}
 
