@@ -9,6 +9,8 @@ public interface VideoRepository {
 
 	Video findById(UUID id);
 
+	List<Video> findByUserId(UUID userId);
+
 	List<Video> findAll();
 
 	void deleteById(UUID id);

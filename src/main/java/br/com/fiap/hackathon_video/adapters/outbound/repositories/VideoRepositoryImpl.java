@@ -34,6 +34,12 @@ public class VideoRepositoryImpl implements VideoRepository {
 	}
 
 	@Override
+	public List<Video> findByUserId(UUID userId) {
+		List<JpaVideoEntity> entities = this.jpaVideoRepository.findByUserId(userId);
+		return entities.stream().map(videoMapper::jpaToDomain).toList();
+	}
+
+	@Override
 	public List<Video> findAll() {
 		List<JpaVideoEntity> entities = this.jpaVideoRepository.findAll();
 		return entities.stream().map(videoMapper::jpaToDomain).toList();
