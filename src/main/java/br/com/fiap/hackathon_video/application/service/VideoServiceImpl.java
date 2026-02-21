@@ -9,6 +9,8 @@ import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadReque
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
 import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
 import br.com.fiap.hackathon_video.application.ports.outbound.S3StoragePort;
+import br.com.fiap.hackathon_video.application.ports.outbound.VideoProcessingPublisherPort;
+import br.com.fiap.hackathon_video.application.ports.outbound.dto.VideoProcessingMessage;
 import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoException;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoFormatException;
@@ -29,6 +31,7 @@ public class VideoServiceImpl implements VideoUseCases {
 	private final VideoRepository videoRepository;
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
 	private final S3StoragePort s3StoragePort;
+	private final VideoProcessingPublisherPort videoProcessingPublisherPort;
 
 	@Override
 	public VideoResponseDTO uploadVideo(VideoUploadRequestDTO videoDTO) {
@@ -55,6 +58,16 @@ public class VideoServiceImpl implements VideoUseCases {
 					LocalDateTime.now());
 
 			Video savedVideo = this.createVideo(video);
+
+			VideoProcessingMessage message = VideoProcessingMessage.builder()
+					.videoId(savedVideo.getId())
+					.userId(savedVideo.getUserId())
+					.s3VideoKey(savedVideo.getS3VideoKey())
+					.originalFileName(savedVideo.getOriginalFileName())
+					.createdAt(savedVideo.getCreatedAt())
+					.build();
+
+			videoProcessingPublisherPort.publishVideoProcessingRequest(message);
 
 			log.info("Vídeo criado com sucesso: {}", savedVideo.getId());
 

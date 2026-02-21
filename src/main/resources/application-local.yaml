@@ -20,6 +20,11 @@ spring:
     ignore-migration-patterns: "*:missing,*:future"
     locations: classpath:db/migration
     clean-disabled: true
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
 server:
   port: 8081
@@ -34,4 +39,10 @@ aws:
   s3:
     bucket-name: hackathon-videos-bucket
     endpoint: http://localhost:4566
+
+app:
+  rabbitmq:
+    exchange: video.processing.exchange
+    queue: video.processing.queue
+    routing-key: video.processing.routing
 
