@@ -30,6 +30,7 @@
 		<java.version>17</java.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<mapstruct-lombok.version>0.2.0</mapstruct-lombok.version>
+		<aws-sdk.version>2.20.26</aws-sdk.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -117,6 +118,18 @@
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+
+		<!-- AWS SDK for S3 -->
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>s3</artifactId>
+			<version>${aws-sdk.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>software.amazon.awssdk</groupId>
+			<artifactId>auth</artifactId>
+			<version>${aws-sdk.version}</version>
 		</dependency>
 	</dependencies>
 
