@@ -1,6 +1,7 @@
 package br.com.fiap.hackathon_video.application.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -32,5 +33,14 @@ public class ProcessingJobsServiceImpl implements ProcessingJobsUseCases {
 				LocalDateTime.now());
 
 		return processingJobsRepository.save(processingJobs);
+	}
+
+	@Override
+	public List<ProcessingJobs> findByVideoIds(List<UUID> videoIds) {
+		if (videoIds == null || videoIds.isEmpty()) {
+			return List.of();
+		}
+
+		return processingJobsRepository.findByVideoIdIn(videoIds);
 	}
 }

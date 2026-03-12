@@ -50,7 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 					this.authenticateUser(token, request);
 				}
 			}
-		} catch (ExpiredTokenException | InvalidTokenException ex) {
+		} catch (ExpiredTokenException ex) {
+			log.warn("Falha na autenticação: {}", ex.getMessage());
+			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expirado");
+			return;
+		} catch (InvalidTokenException ex) {
 			log.warn("Falha na autenticação: {}", ex.getMessage());
 		} catch (Exception ex) {
 			log.error("Erro inesperado ao processar autenticação JWT: {}", ex.getMessage(), ex);

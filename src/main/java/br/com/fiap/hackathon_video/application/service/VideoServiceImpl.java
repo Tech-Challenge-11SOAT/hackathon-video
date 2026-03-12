@@ -1,6 +1,9 @@
 package br.com.fiap.hackathon_video.application.service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
+import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoWithProcessingStatusResponseDTO;
 import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
 import br.com.fiap.hackathon_video.application.ports.outbound.S3StoragePort;
 import br.com.fiap.hackathon_video.application.ports.outbound.VideoProcessingPublisherPort;
@@ -17,6 +21,7 @@ import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 import br.com.fiap.hackathon_video.domain.enums.EStatus;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoException;
 import br.com.fiap.hackathon_video.domain.exception.InvalidVideoFormatException;
+import br.com.fiap.hackathon_video.domain.processingjobs.ProcessingJobs;
 import br.com.fiap.hackathon_video.domain.video.Video;
 import br.com.fiap.hackathon_video.domain.video.VideoRepository;
 import lombok.RequiredArgsConstructor;
@@ -73,6 +78,22 @@ public class VideoServiceImpl implements VideoUseCases {
 		}
 
 		return videoRepository.save(video);
+	}
+
+	@Override
+	public List<VideoWithProcessingStatusResponseDTO> listUserVideos() {
+		String userId = this.getAuthenticatedUserUseCase.getAuthenticatedUserId();
+		UUID userUuid = UUID.fromString(userId);
+
+		List<Video> videos = videoRepository.findByUserId(userUuid);
+		if (videos.isEmpty()) {
+			return List.of();
+		}
+
+		Map<UUID, ProcessingJobs> jobsByVideoId = loadLatestProcessingJobs(videos);
+		return videos.stream()
+				.map(video -> buildVideoWithProcessingStatus(video, jobsByVideoId.get(video.getId())))
+				.toList();
 	}
 
 	/**
@@ -158,5 +179,41 @@ public class VideoServiceImpl implements VideoUseCases {
 				.build();
 
 		this.videoProcessingPublisherPort.publishVideoProcessingRequest(message);
+	}
+
+	private Map<UUID, ProcessingJobs> loadLatestProcessingJobs(List<Video> videos) {
+		List<UUID> videoIds = videos.stream().map(Video::getId).toList();
+		List<ProcessingJobs> jobs = this.processingJobsUseCases.findByVideoIds(videoIds);
+
+		Map<UUID, ProcessingJobs> jobsByVideoId = new HashMap<>();
+		for (ProcessingJobs job : jobs) {
+			ProcessingJobs current = jobsByVideoId.get(job.getVideoId());
+			if (current == null || isAfter(job.getCreatedAt(), current.getCreatedAt())) {
+				jobsByVideoId.put(job.getVideoId(), job);
+			}
+		}
+
+		return jobsByVideoId;
+	}
+
+	private boolean isAfter(LocalDateTime candidate, LocalDateTime reference) {
+		if (candidate == null) {
+			return false;
+		}
+		if (reference == null) {
+			return true;
+		}
+		return candidate.isAfter(reference);
+	}
+
+	private VideoWithProcessingStatusResponseDTO buildVideoWithProcessingStatus(Video video, ProcessingJobs job) {
+		String videoStatus = video.getStatus() == null ? null : video.getStatus().name();
+		String processingStatus = job == null || job.getStatus() == null ? null : job.getStatus().name();
+
+		return new VideoWithProcessingStatusResponseDTO(
+				video.getId().toString(),
+				video.getOriginalFileName(),
+				videoStatus,
+				processingStatus);
 	}
 }

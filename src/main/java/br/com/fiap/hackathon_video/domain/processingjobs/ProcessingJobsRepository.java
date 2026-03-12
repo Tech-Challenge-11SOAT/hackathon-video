@@ -9,6 +9,8 @@ public interface ProcessingJobsRepository {
 
 	ProcessingJobs findById(UUID id);
 
+	List<ProcessingJobs> findByVideoIdIn(List<UUID> videoIds);
+
 	List<ProcessingJobs> findAll();
 
 	void deleteById(UUID id);

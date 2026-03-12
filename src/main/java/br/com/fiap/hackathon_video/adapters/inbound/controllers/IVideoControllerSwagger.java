@@ -2,11 +2,15 @@ package br.com.fiap.hackathon_video.adapters.inbound.controllers;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
+import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoWithProcessingStatusResponseDTO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -48,4 +52,18 @@ public interface IVideoControllerSwagger {
 			@ApiResponse(responseCode = "500", description = "Erro ao processar o upload ou salvar no banco de dados")
 	})
 	ResponseEntity<VideoResponseDTO> upload(@Valid @ModelAttribute VideoUploadRequestDTO videoDTO);
+
+	/**
+	 * Lista os videos do usuario autenticado com o status de processamento
+	 *
+	 * @return Lista de videos com status de processamento
+	 */
+	@GetMapping
+	@Operation(summary = "Listar videos do usuario", description = "Retorna os videos do usuario autenticado com o status de processamento.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Lista de videos retornada com sucesso", content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = VideoWithProcessingStatusResponseDTO.class))),
+			@ApiResponse(responseCode = "401", description = "Token JWT ausente, expirado ou invalido"),
+			@ApiResponse(responseCode = "500", description = "Erro ao buscar videos")
+	})
+	ResponseEntity<List<VideoWithProcessingStatusResponseDTO>> listUserVideos();
 }

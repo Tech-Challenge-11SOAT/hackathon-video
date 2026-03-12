@@ -1,7 +1,10 @@
 package br.com.fiap.hackathon_video.adapters.inbound.controllers;
 
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -9,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.fiap.hackathon_video.adapters.inbound.dto.request.VideoUploadRequestDTO;
 import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoResponseDTO;
+import br.com.fiap.hackathon_video.adapters.inbound.dto.response.VideoWithProcessingStatusResponseDTO;
 import br.com.fiap.hackathon_video.application.ports.inbound.GetAuthenticatedUserUseCase;
 import br.com.fiap.hackathon_video.application.usecases.VideoUseCases;
 import jakarta.validation.Valid;
@@ -33,6 +37,16 @@ public class VideoController implements IVideoControllerSwagger {
 
 		VideoResponseDTO response = videoUseCases.uploadVideo(videoDTO);
 		return ResponseEntity.accepted().body(response);
+	}
+
+	@Override
+	@GetMapping
+	public ResponseEntity<List<VideoWithProcessingStatusResponseDTO>> listUserVideos() {
+		String username = getAuthenticatedUserUseCase.getAuthenticatedUsername();
+		log.info("Usuario {} consultando lista de videos", username);
+
+		List<VideoWithProcessingStatusResponseDTO> response = videoUseCases.listUserVideos();
+		return ResponseEntity.ok(response);
 	}
 
 }

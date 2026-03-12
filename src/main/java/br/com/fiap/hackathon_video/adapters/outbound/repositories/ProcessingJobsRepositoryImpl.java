@@ -33,6 +33,12 @@ public class ProcessingJobsRepositoryImpl implements ProcessingJobsRepository {
 	}
 
 	@Override
+	public List<ProcessingJobs> findByVideoIdIn(List<UUID> videoIds) {
+		List<JpaProcessingJobsEntity> entities = this.jpaProcessingJobsRepository.findByVideoIdIn(videoIds);
+		return entities.stream().map(processingJobsMapper::jpaToDomain).toList();
+	}
+
+	@Override
 	public void deleteById(UUID id) {
 		this.jpaProcessingJobsRepository.deleteById(id);
 	}
