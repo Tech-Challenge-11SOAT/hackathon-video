@@ -32,7 +32,7 @@ server:
   port: 8081
 
 jwt:
-  secret: postechHackathon2026SecretKey12345
+  secret: ${JWT_SECRET:postechHackathon2026SecretKey12345}
 
 aws:
   region: ${AWS_REGION:us-east-1}
@@ -46,3 +46,19 @@ app:
     exchange: ${RABBITMQ_EXCHANGE:video.processing.exchange}
     queue: ${RABBITMQ_QUEUE:video.processing.queue}
     routing-key: ${RABBITMQ_ROUTING_KEY:video.processing.routing}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
