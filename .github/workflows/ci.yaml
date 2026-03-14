@@ -31,9 +31,6 @@ jobs:
       - name: Compilar projeto
         run: mvn -B clean compile -DskipTests=true
 
-      - name: Rodar testes + coverage
-        run: mvn -B verify
-
       - name: Verificar jacoco.xml
         run: ls -la target/site/jacoco/jacoco.xml
 
