@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-test:
-    name: Build + Testes + Coverage + Sonar
+    name: Build + Testes + Coverage
     runs-on: ubuntu-latest
 
     steps:
