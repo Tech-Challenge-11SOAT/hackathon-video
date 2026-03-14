@@ -33,8 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VideoServiceImpl implements VideoUseCases {
 
 	private static final long MAX_FILE_SIZE = 5_000_000_000L; // 5GB
-	private static final Set<String> ALLOWED_FORMATS = Set.of("mp4", "avi", "mkv", "mov", "flv", "webm",
-			"m4v");
+	private static final Set<String> ALLOWED_FORMATS = Set.of("mp4", "avi", "mkv", "mov", "flv", "webm", "m4v");
 
 	private final VideoRepository videoRepository;
 	private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
@@ -55,7 +54,6 @@ public class VideoServiceImpl implements VideoUseCases {
 
 			Video savedVideo = this.createVideo(buildVideo(userId, originalFileName, s3VideoKey));
 
-			this.createProcessingJob(savedVideo);
 			this.publishProcessingMessage(savedVideo);
 
 			log.info("Vídeo criado com sucesso: {}", savedVideo.getId());
