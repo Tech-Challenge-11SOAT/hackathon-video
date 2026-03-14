@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   build-test:
-    name: Build + Testes + Coverage
+    name: Build + Testes
     runs-on: ubuntu-latest
 
     steps:
@@ -31,22 +31,5 @@ jobs:
       - name: Compilar projeto
         run: mvn -B clean compile -DskipTests=true
 
-      - name: Verificar jacoco.xml
-        run: ls -la target/site/jacoco/jacoco.xml
-
       - name: Validar build da imagem Docker
         run: docker build -t app-ci:${{ github.sha }} .
-
-      - name: Upload dos resultados dos testes
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-results
-          path: target/surefire-reports/
-
-      - name: Upload do relatório JaCoCo
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: jacoco-report
-          path: target/site/jacoco/
